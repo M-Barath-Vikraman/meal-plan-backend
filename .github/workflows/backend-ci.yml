@@ -32,7 +32,7 @@ jobs:
       - name: Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: arn:aws:iam::398681518047:role/smartmeal-github-actions-ecr-role
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GitHubActions
 
