@@ -24,7 +24,10 @@ const PORT = process.env.PORT || 3000;
 
 // CORS configuration to allow local frontend on port 5173
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  origin: ['http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://main.d3ovzn44hxkswc.amplifyapp.com'
+  ],
   credentials: true,
 }));
 
@@ -48,7 +51,7 @@ app.use('/api', notFoundHandler);
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`==================================================`);
   console.log(`🚀 SmartMeal Express API Server running on port ${PORT}`);
   console.log(`🏥 Health Check: http://localhost:${PORT}/api/health`);

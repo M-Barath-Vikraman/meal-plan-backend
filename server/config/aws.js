@@ -5,10 +5,6 @@ dotenv.config();
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
-if (!process.env.AWS_PROFILE) {
-  process.env.AWS_PROFILE = 'smartmeal-local';
-}
-
 const region = process.env.AWS_REGION || 'ap-south-1';
 
 // Initialize low-level DynamoDB Client using AWS SDK default credential provider chain
