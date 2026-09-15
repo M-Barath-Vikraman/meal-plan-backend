@@ -1,4 +1,4 @@
-name: Backend CI
+name: Test AWS OIDC
 
 on:
   push:
@@ -9,13 +9,8 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  AWS_REGION: ap-south-1
-  ECR_REPOSITORY: smartmeal-backend
-
 jobs:
-  build-and-push:
-    name: Build and Push Docker Image
+  test-oidc:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,30 +22,14 @@ jobs:
         run: |
           echo "Repository: $GITHUB_REPOSITORY"
           echo "Ref: $GITHUB_REF"
-          echo "Workflow: $GITHUB_WORKFLOW"
 
       - name: Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::398681518047:role/smartmeal-github-actions-ecr-role
-          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-south-1
           role-session-name: GitHubActions
 
       - name: Verify AWS identity
         run: |
           aws sts get-caller-identity
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build Docker image
-        run: |
-          docker build \
-            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
-            .
-
-      - name: Push Docker image to ECR
-        run: |
-          docker push \
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
