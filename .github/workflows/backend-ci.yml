@@ -1,4 +1,4 @@
-name: Test AWS OIDC
+name: Backend CI
 
 on:
   push:
@@ -9,61 +9,37 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: smartmeal-backend
+
 jobs:
-  test-oidc:
-    name: Test GitHub OIDC with AWS
+  build-and-push:
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
 
     steps:
 
-      # 1. Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Show basic GitHub context
-      - name: Show GitHub context
-        run: |
-          echo "Repository: $GITHUB_REPOSITORY"
-          echo "Ref: $GITHUB_REF"
-          echo "Workflow: $GITHUB_WORKFLOW"
-          echo "Actor: $GITHUB_ACTOR"
-
-      # 3. Get OIDC token claims
-      - name: Get GitHub OIDC claims
-        shell: bash
-        run: |
-          TOKEN=$(curl -s \
-            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" \
-            | jq -r '.value')
-
-          PAYLOAD=$(echo "$TOKEN" | cut -d '.' -f 2)
-
-          # Add Base64 padding
-          PADDING=$(( (4 - ${#PAYLOAD} % 4) % 4 ))
-          if [ "$PADDING" -gt 0 ]; then
-            PAYLOAD="${PAYLOAD}$(printf '=%.0s' $(seq 1 $PADDING))"
-          fi
-
-          echo "$PAYLOAD" | base64 -d 2>/dev/null | jq '{
-            sub,
-            aud,
-            repository,
-            repository_id,
-            repository_owner,
-            repository_owner_id,
-            ref
-          }'
-
-      # 4. Configure AWS credentials using OIDC
       - name: Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::398681518047:role/smartmeal-github-actions-ecr-role-v2
-          aws-region: ap-south-1
-          role-session-name: GitHubActions
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      # 5. Verify AWS identity
-      - name: Verify AWS identity
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
         run: |
-          aws sts get-caller-identity
+          docker build \
+            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
+            .
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push \
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
