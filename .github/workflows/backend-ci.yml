@@ -43,3 +43,25 @@ jobs:
         run: |
           docker push \
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+    deploy:
+      name: Deploy to ECS Express Mode
+      needs: build-and-push
+      runs-on: ubuntu-latest
+
+      steps:
+
+        - name: Configure AWS credentials using OIDC
+          uses: aws-actions/configure-aws-credentials@v5
+          with:
+           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+           aws-region: ${{ env.AWS_REGION }}
+
+        - name: Deploy to ECS Express Mode
+          uses: aws-actions/amazon-ecs-deploy-express-service@v1
+           with:
+            service-name: smartmeal-backend
+            image: 398681518047.dkr.ecr.ap-south-1.amazonaws.com/smartmeal-backend:${{ github.sha }}
+            execution-role-arn: arn:aws:iam::398681518047:role/SmartMealECSTaskExecutionRole
+            infrastructure-role-arn: arn:aws:iam::398681518047:role/ecsInfrastructureRoleForExpressServices
+            container-port: 3000
+            health-check-path: /api/health

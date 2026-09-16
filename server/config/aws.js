@@ -11,6 +11,7 @@ const region = process.env.AWS_REGION || 'ap-south-1';
 const ddbClient = new DynamoDBClient({ region });
 
 // Initialize DynamoDBDocumentClient for simplified JS object marshalling/unmarshalling
+// just a testinng line 
 export const docClient = DynamoDBDocumentClient.from(ddbClient, {
   marshallOptions: {
     removeUndefinedValues: true,
