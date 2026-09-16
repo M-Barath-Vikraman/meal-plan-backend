@@ -26,7 +26,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors({
   origin: ['http://localhost:5173',
     'http://127.0.0.1:5173',
-    'https://main.d3ovzn44hxkswc.amplifyapp.com'
+    'https://main.dog3dcvao5gjr.amplifyapp.com/',
   ],
   credentials: true,
 }));
